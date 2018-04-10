@@ -7,7 +7,7 @@
 extern "C" {
 #include <user_interface.h>
 }
-
+bool sent=false;
 unsigned int request_i = 0;
 unsigned int response_i = 0;
 unsigned int ssid = ESP.getChipId();
@@ -42,25 +42,22 @@ server.send(200,"text/html",stringpage);
   }
   
 }
+
 String manageRequest(String request)
 {
   /* Print out received message */
+  Serial.println("SENT!");
   Serial.print("received: ");
   Serial.println(request);
-
-  /* return a string to send back */
-  char response[60];
-  sprintf(response, "---------------Acknowledged SUPERNODE %d",ESP.getChipId());
-  return response;
+  sent = true;
+  decodedmsg = "";
 }
 
 void setup()
 {
   Serial.begin(115200);
   delay(10);
-
-  Serial.println();
-  Serial.println();
+  
   Serial.println("Setting up mesh node...");
   
   Serial.println("HTTP server started");
@@ -72,7 +69,18 @@ void setup()
 void loop()
 {
       server.handleClient();
- 
+      
+      if(decodedmsg.length()>0)
+      {
+        sent = false;
+        Serial.println("-------------------------------SENDING THE MESSAGE-------------------------");
+         
+         while(!sent)
+         {
+          Serial.println("Waiting to send");
+          mesh_node.attemptScan(decodedmsg);
+         }         
+      }
 }
 
 
